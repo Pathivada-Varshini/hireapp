@@ -17,7 +17,7 @@ public class SwaggerConfig {
 
     @Bean
     public OpenAPI customOpenAPI() {
-        return new OpenAPI()
-                .addSecurityItem(new SecurityRequirement().addList("basicAuth"));
+        return new OpenAPI();
+//                .addSecurityItem(new SecurityRequirement().addList("basicAuth"));
     }
 }

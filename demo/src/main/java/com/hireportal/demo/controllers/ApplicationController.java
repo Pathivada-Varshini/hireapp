@@ -1,10 +1,12 @@
 package com.hireportal.demo.controllers;
 
 import com.hireportal.demo.dto.ApplicationDTO;
+import com.hireportal.demo.enums.ApplicationStatus;
 import com.hireportal.demo.exceptions.NotFoundException;
 import com.hireportal.demo.models.Application;
 import com.hireportal.demo.services.ApplicationService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -24,57 +26,63 @@ public class ApplicationController {
         this.applicationService = applicationService;
     }
 
-    // Job Seeker can create an application
+    // Apply to a Job - Available for JOB_SEEKER only
+    @PostMapping("/{jobId}/apply")
     @PreAuthorize("hasAuthority('JOB_SEEKER')")
-    @PostMapping
-    public ResponseEntity<Application> createApplication(
-            @RequestParam("userId") Long userId,
-            @RequestParam("jobId") Long jobId,
-            @Valid @RequestBody ApplicationDTO applicationDTO) {
-
-        return ResponseEntity.ok(applicationService.createApplication(userId, jobId, applicationDTO));
+    public ResponseEntity<String> applyToJob(@PathVariable("jobId") Long jobId, @RequestParam("userId") Long userId) {
+        try {
+            applicationService.applyToJob(userId, jobId);
+            return ResponseEntity.ok("Application submitted successfully!");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User or Job not found: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred: " + e.getMessage());
+        }
     }
 
-    // Get all applications - accessible by both JOB_SEEKER and JOB_PROVIDER
-    @PreAuthorize("hasAuthority('JOB_SEEKER') or hasAuthority('JOB_PROVIDER')")
+    // Get all Applications - Accessible for both JOB_PROVIDER and JOB_SEEKER
     @GetMapping
+    @PreAuthorize("hasAnyAuthority('JOB_PROVIDER', 'JOB_SEEKER')")
     public ResponseEntity<List<Application>> getAllApplications() {
         return ResponseEntity.ok(applicationService.getAllApplications());
     }
 
-    // Get applications by userId
-    @PreAuthorize("hasAuthority('JOB_SEEKER') and #userId == authentication.principal.id")
+    // Get Applications by User ID - Accessible for JOB_PROVIDER and JOB_SEEKER
     @GetMapping("/user/{userId}")
+    @PreAuthorize("hasAnyAuthority('JOB_PROVIDER', 'JOB_SEEKER')")
     public ResponseEntity<List<Application>> getApplicationsByUserId(@PathVariable("userId") Long userId) {
         return ResponseEntity.ok(applicationService.getApplicationsByUserId(userId));
     }
 
-    // Get applications by jobId
-    @PreAuthorize("hasAuthority('JOB_PROVIDER')")
+    // Get Applications by Job ID - Accessible for JOB_PROVIDER only
     @GetMapping("/job/{jobId}")
+    @PreAuthorize("hasRole('JOB_PROVIDER')")
     public ResponseEntity<List<Application>> getApplicationsByJobId(@PathVariable("jobId") Long jobId) {
         return ResponseEntity.ok(applicationService.getApplicationsByJobId(jobId));
     }
 
-    @PreAuthorize("hasAuthority('JOB_SEEKER') or hasAuthority('JOB_PROVIDER')")
+    // Get a specific Application by ID - Accessible for both JOB_PROVIDER and JOB_SEEKER
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('JOB_PROVIDER', 'JOB_SEEKER')")
     public ResponseEntity<Application> getApplicationById(@PathVariable("id") Long applicationId) {
         Application application = applicationService.getApplicationById(applicationId)
                 .orElseThrow(() -> new NotFoundException("Application not found"));
         return ResponseEntity.ok(application);
     }
 
-
-    // Update application
-    @PreAuthorize("hasAuthority('JOB_SEEKER') and #applicationId == authentication.principal.id")
-    @PutMapping("/{id}")
-    public ResponseEntity<Application> updateApplication(@PathVariable("id") Long applicationId, @Valid @RequestBody ApplicationDTO applicationDTO) {
-        return ResponseEntity.ok(applicationService.updateApplication(applicationId, applicationDTO));
+    // Update Application Status - Accessible for JOB_PROVIDER only
+    @PatchMapping("/{id}/status")
+    @PreAuthorize("hasAuthority('JOB_PROVIDER')")
+    public ResponseEntity<Application> updateApplicationStatus(
+            @PathVariable("id") Long applicationId,
+            @RequestParam("status") ApplicationStatus status) {
+        Application updatedApplication = applicationService.updateApplicationStatus(applicationId, status);
+        return ResponseEntity.ok(updatedApplication);
     }
 
-    // Delete application
-    @PreAuthorize("hasAuthority('JOB_SEEKER') and #applicationId == authentication.principal.id")
+    // Delete an Application - Accessible for JOB_PROVIDER only
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('JOB_PROVIDER')")
     public ResponseEntity<Void> deleteApplication(@PathVariable("id") Long applicationId) {
         applicationService.deleteApplication(applicationId);
         return ResponseEntity.noContent().build();

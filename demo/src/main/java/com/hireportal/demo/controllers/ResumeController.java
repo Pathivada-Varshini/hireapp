@@ -20,7 +20,6 @@ public class ResumeController {
         this.resumeService = resumeService;
     }
 
-    // Create or update a resume (only JOB_SEEKER can update their resume)
     @PreAuthorize("hasAuthority('JOB_SEEKER')")
     @PostMapping("/createOrUpdate")
     public ResponseEntity<BaseResponse<ResumeDTO>> createOrUpdateResume(@RequestBody ResumeDTO resumeDTO) {
@@ -38,7 +37,6 @@ public class ResumeController {
         }
     }
 
-    // View a resume (both JOB_SEEKER and JOB_PROVIDER can view resumes)
     @PreAuthorize("hasAuthority('JOB_SEEKER') or hasAuthority('JOB_PROVIDER')")
     @GetMapping("/view/{userId}")
     public ResponseEntity<BaseResponse<ResumeDTO>> viewResume(@PathVariable Long userId) {
@@ -56,7 +54,6 @@ public class ResumeController {
         }
     }
 
-    // Update specific fields of a resume using PATCH (only JOB_SEEKER can update their own resume)
     @PreAuthorize("hasAuthority('JOB_SEEKER')")
     @PatchMapping("/update/{userId}")
     public ResponseEntity<BaseResponse<ResumeDTO>> updateResumePartial(

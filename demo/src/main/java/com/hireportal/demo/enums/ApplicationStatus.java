@@ -6,5 +6,5 @@ public enum ApplicationStatus {
     WITHDRAWN,
     SHORTLISTED,
 
-    REJECTED
+    PENDING, REJECTED
 }

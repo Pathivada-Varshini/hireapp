@@ -1,5 +1,10 @@
 package com.hireportal.demo.services;
 
+import com.hireportal.demo.dto.JobDTO;
+import com.hireportal.demo.enums.ExperienceRequired;
+import com.hireportal.demo.enums.JobType;
+import com.hireportal.demo.enums.Role;
+import com.hireportal.demo.enums.SalaryRange;
 import com.hireportal.demo.exceptions.NotFoundException;
 import com.hireportal.demo.models.Category;
 import com.hireportal.demo.models.Job;
@@ -26,8 +31,6 @@ public class JobService {
         this.categoryRepository = categoryRepository;
         this.userRepository = userRepository;
     }
-
-    // Create a new job with the specified userId and categoryId
     @Transactional
     public Job createJob(Long userId, Long categoryId, Job job) {
         User user = userRepository.findById(userId)
@@ -39,32 +42,60 @@ public class JobService {
         job.setUser(user);
         job.setCategory(category);
 
+
+        if (user.getRole() == Role.JOB_PROVIDER && user.getEmployerDetails() != null) {
+            job.setCompanyName(user.getEmployerDetails().getCompanyName());
+        }
+
         return jobRepository.save(job);
     }
 
-    // Get a job by ID
+    @Transactional
+    public Job partialUpdateJob(Long jobId, JobDTO jobDTO) {
+        Job existingJob = getJobById(jobId);
+
+        if (jobDTO.getJobTitle() != null) {
+            existingJob.setJobTitle(jobDTO.getJobTitle());
+        }
+        if (jobDTO.getCompanyName() != null) {
+            existingJob.setCompanyName(jobDTO.getCompanyName());
+        }
+        if (jobDTO.getJobDescription() != null) {
+            existingJob.setJobDescription(jobDTO.getJobDescription());
+        }
+        if (jobDTO.getSkillsRequired() != null) {
+            existingJob.setSkillsRequired(jobDTO.getSkillsRequired());
+        }
+        if (jobDTO.getJobType() != null) {
+            existingJob.setJobType(jobDTO.getJobType());
+        }
+        if (jobDTO.getSalaryRange() != null) {
+            existingJob.setSalaryRange(jobDTO.getSalaryRange());
+        }
+        if (jobDTO.getExperienceRequired() != null) {
+            existingJob.setExperienceRequired(jobDTO.getExperienceRequired());
+        }
+        if (jobDTO.getLocation() != null) {
+            existingJob.setLocation(jobDTO.getLocation());
+        }
+        if (jobDTO.getPostDate() != null) {
+            existingJob.setPostDate(jobDTO.getPostDate());
+        }
+        if (jobDTO.getEndDate() != null) {
+            existingJob.setEndDate(jobDTO.getEndDate());
+        }
+
+        return jobRepository.save(existingJob);
+    }
     public Job getJobById(Long jobId) {
         return jobRepository.findById(jobId)
                 .orElseThrow(() -> new NotFoundException("Job not found"));
     }
 
-    // Get all jobs
     public List<Job> getAllJobs() {
         return jobRepository.findAll();
     }
 
-    // Apply to a job (JOB_SEEKER)
-    @Transactional
-    public void applyToJob(Long jobId, Long userId) {
-        Job job = getJobById(jobId);
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
-
-        // Log the application process or store in a separate table if needed.
-        System.out.println("User " + user.getUserId() + " applied to job " + job.getJobId());
-    }
-
-    // Update an existing job
     @Transactional
     public Job updateJob(Long jobId, Job updatedJob) {
         Job existingJob = getJobById(jobId);
@@ -82,8 +113,10 @@ public class JobService {
 
         return jobRepository.save(existingJob);
     }
+    public List<Job> filterJobs(ExperienceRequired experienceRequired, SalaryRange salaryRange, JobType jobType) {
+        return jobRepository.findFilteredJobs(experienceRequired, salaryRange, jobType);
+    }
 
-    // Delete a job by its ID
     @Transactional
     public void deleteJob(Long jobId) {
         if (!jobRepository.existsById(jobId)) {

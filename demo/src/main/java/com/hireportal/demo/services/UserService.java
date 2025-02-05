@@ -23,10 +23,11 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final EmployerDetailsRepository employerDetailsRepository;
 
+
     @Autowired
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, EmployerDetailsRepository employerDetailsRepository) {
+    public UserService(UserRepository userRepository, EmployerDetailsRepository employerDetailsRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
+		 this.passwordEncoder = passwordEncoder;
         this.employerDetailsRepository = employerDetailsRepository;
     }
 
@@ -34,7 +35,9 @@ public class UserService {
         User user = new User();
         user.setUserName(userDTO.getUserName());
         user.setEmail(userDTO.getEmail());
+
         user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
+
         user.setFirstName(userDTO.getFirstName());
         user.setLastName(userDTO.getLastName());
         user.setContactNumber(userDTO.getContactNumber());
@@ -51,6 +54,8 @@ public class UserService {
         return userRepository.save(user);
     }
 
+
+
     public User loginUser(String email, String password) {
         Optional<User> userOptional = userRepository.findByEmail(email);
         if (userOptional.isEmpty()) {
@@ -58,9 +63,10 @@ public class UserService {
         }
         User user = userOptional.get();
 
-        if (!passwordEncoder.matches(password, user.getPassword())) {
-            throw new InvalidCredentialsException("Invalid email or password.");
-        }
+
+	  if (!passwordEncoder.matches(password, user.getPassword())) {
+		  throw new InvalidCredentialsException("Invalid email or password."); }
+
 
         return user;
     }

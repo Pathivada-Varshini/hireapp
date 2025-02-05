@@ -10,4 +10,5 @@ import java.util.List;
 @Repository
 public interface SkillsRepository extends JpaRepository<Skills, Long> {
     List<Skills> findByUser(User user);
+    void deleteByUser(User user);
 }

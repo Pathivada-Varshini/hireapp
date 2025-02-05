@@ -12,8 +12,8 @@ import lombok.AllArgsConstructor;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
 @Table(name = "application")
+@Entity
 public class Application {
 
     @Id
@@ -21,7 +21,8 @@ public class Application {
     @Column(name = "application_id")
     private Long applicationId;
 
-    @Column(name = "application_date")
+    @Column(name = "application_date", updatable = false)
+    @Temporal(TemporalType.TIMESTAMP)
     private Date applicationDate;
 
     @Enumerated(EnumType.STRING)
@@ -35,4 +36,11 @@ public class Application {
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @PrePersist
+    public void onCreate() {
+        if (applicationDate == null) {
+            applicationDate = new Date();
+        }
+    }
 }

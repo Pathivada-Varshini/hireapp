@@ -1,67 +1,50 @@
 package com.hireportal.demo.config;
 
-import com.hireportal.demo.services.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.HttpStatusEntryPoint;
-import org.springframework.security.web.access.AccessDeniedHandler;
-import org.springframework.http.HttpStatus;
 
 @Configuration
+@EnableMethodSecurity(prePostEnabled = true) // Ensuring method-level security is enabled
 public class SecurityConfig {
-
-    private final CustomUserDetailsService customUserDetailsService;
-
-    public SecurityConfig(CustomUserDetailsService customUserDetailsService) {
-        this.customUserDetailsService = customUserDetailsService;
-    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .authorizeHttpRequests(authorizeRequests ->
-                        authorizeRequests
-                                .requestMatchers("/api/users/login", "/api/users/register", "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**")
-                                .permitAll()
-                                .anyRequest()
-                                .authenticated()
+                .csrf(csrf -> csrf
+                        .ignoringRequestMatchers(
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/api/users/register",
+                                "/api/users/login"
+                        )
                 )
-                .csrf(csrf -> csrf.disable())
-                .exceptionHandling(exceptionHandling ->
-                        exceptionHandling
-                                .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
-                                .accessDeniedHandler(accessDeniedHandler())
-                );
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/swagger-ui.html"
+                        ).permitAll() // Allow access to Swagger UI and API docs
+                        .requestMatchers("/api/users/register", "/api/users/login").permitAll() // Public registration and login
+                        .requestMatchers("/api/applications/{jobId}/apply").hasAuthority("JOB_SEEKER") // JOB_SEEKER authority required for applications
+                        .requestMatchers("/api/applications/{id}/status").hasAuthority("JOB_PROVIDER") // JOB_PROVIDER authority for application status
+                        .requestMatchers("/api/jobs/create", "/api/jobs/{jobId}", "/api/categories/**", "/api/employers/**").hasAuthority("JOB_PROVIDER") // JOB_PROVIDER authority required for job management
+                        .requestMatchers("/api/summaries/**", "/api/skills/**", "/api/experiences/**", "/api/languages/**", "/api/education/**").hasAuthority("JOB_SEEKER") // JOB_SEEKER authority for managing personal details
+                        .requestMatchers("/api/applications/**", "/api/jobs/**").hasAnyAuthority("JOB_PROVIDER", "JOB_SEEKER") // Both authorities for application and job details
+                        .anyRequest().authenticated() // Ensure all other requests are authenticated
+                )
+                .httpBasic(Customizer.withDefaults()); // Basic authentication (adjust if using JWT or another mechanism)
 
         return http.build();
     }
 
     @Bean
-    public AccessDeniedHandler accessDeniedHandler() {
-        // Returns a 403 Forbidden response for authorized users but lack access to the resource
-        return (request, response, accessDeniedException) ->
-                response.sendError(HttpStatus.FORBIDDEN.value(), "Forbidden: Access is denied");
-    }
-
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
-        return authenticationConfiguration.getAuthenticationManager();
-    }
-
-    @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public UserDetailsService userDetailsService() {
-        return customUserDetailsService;
     }
 }

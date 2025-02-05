@@ -1,12 +1,14 @@
 package com.hireportal.demo.controllers;
 
 import com.hireportal.demo.dto.JobDTO;
+import com.hireportal.demo.enums.ExperienceRequired;
+import com.hireportal.demo.enums.JobType;
+import com.hireportal.demo.enums.SalaryRange;
 import com.hireportal.demo.models.Job;
 import com.hireportal.demo.services.JobService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
@@ -24,8 +26,6 @@ public class JobController {
         this.jobService = jobService;
     }
 
-    // Create a new job - accessible only by JOB_PROVIDER role
-    @PreAuthorize("hasAuthority('JOB_PROVIDER')")
     @PostMapping("/create")
     public ResponseEntity<JobDTO> createJob(
             @RequestParam("userId") Long userId,
@@ -35,14 +35,20 @@ public class JobController {
         return ResponseEntity.status(HttpStatus.CREATED).body(convertToDTO(job));
     }
 
-    // Get a job by ID - accessible to both JOB_SEEKER and JOB_PROVIDER
+    @PatchMapping("/{jobId}")
+    public ResponseEntity<JobDTO> partialUpdateJob(
+            @PathVariable("jobId") Long jobId,
+            @Valid @RequestBody JobDTO jobDTO) {
+        Job updatedJob = jobService.partialUpdateJob(jobId, jobDTO);
+        return ResponseEntity.ok(convertToDTO(updatedJob));
+    }
+
     @GetMapping("/{jobId}")
     public ResponseEntity<JobDTO> getJobById(@PathVariable("jobId") Long jobId) {
         Job job = jobService.getJobById(jobId);
         return ResponseEntity.ok(convertToDTO(job));
     }
 
-    // Get all jobs - accessible to both JOB_SEEKER and JOB_PROVIDER
     @GetMapping
     public ResponseEntity<List<JobDTO>> getAllJobs() {
         List<Job> jobs = jobService.getAllJobs();
@@ -52,8 +58,6 @@ public class JobController {
         return ResponseEntity.ok(jobDTOs);
     }
 
-    // Update a job - accessible only by JOB_PROVIDER
-    @PreAuthorize("hasAuthority('JOB_PROVIDER')")
     @PutMapping("/{jobId}")
     public ResponseEntity<JobDTO> updateJob(
             @PathVariable("jobId") Long jobId,
@@ -62,23 +66,30 @@ public class JobController {
         return ResponseEntity.ok(convertToDTO(updatedJob));
     }
 
-    // Delete a job - accessible only by JOB_PROVIDER
-    @PreAuthorize("hasAuthority('JOB_PROVIDER')")
+    @GetMapping("/filter")
+    public ResponseEntity<?> filterJobs(
+            @RequestParam(value = "experienceRequired", required = false) ExperienceRequired experienceRequired,
+            @RequestParam(value = "salaryRange", required = false) SalaryRange salaryRange,
+            @RequestParam(value = "jobType", required = false) JobType jobType) {
+
+        List<Job> filteredJobs = jobService.filterJobs(experienceRequired, salaryRange, jobType);
+
+        if (filteredJobs.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("No jobs found matching the specified criteria.");
+        }
+        List<JobDTO> jobDTOs = filteredJobs.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(jobDTOs);
+    }
+
     @DeleteMapping("/{jobId}")
     public ResponseEntity<Void> deleteJob(@PathVariable("jobId") Long jobId) {
         jobService.deleteJob(jobId);
         return ResponseEntity.noContent().build();
     }
 
-    // Apply to a job - accessible only by JOB_SEEKER
-    @PreAuthorize("hasAuthority('JOB_SEEKER')")
-    @PostMapping("/{jobId}/apply")
-    public ResponseEntity<String> applyToJob(@PathVariable("jobId") Long jobId, @RequestParam("userId") Long userId) {
-        jobService.applyToJob(jobId, userId);
-        return ResponseEntity.ok("Application submitted successfully!");
-    }
-
-    // Convert Job entity to JobDTO
     private JobDTO convertToDTO(Job job) {
         JobDTO jobDTO = new JobDTO();
         jobDTO.setJobId(job.getJobId());
@@ -97,7 +108,6 @@ public class JobController {
         return jobDTO;
     }
 
-    // Convert JobDTO to Job entity
     private Job convertToEntity(JobDTO jobDTO) {
         Job job = new Job();
         job.setJobId(jobDTO.getJobId());

@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
-
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
@@ -42,8 +41,6 @@ public class UserController {
         }
     }
 
-
-    // Login a user
     @PostMapping("/login")
     public ResponseEntity<BaseResponse<String>> login(@RequestParam String email, @RequestParam String password) {
         BaseResponse<String> baseResponse = new BaseResponse<>();
@@ -60,8 +57,8 @@ public class UserController {
         }
     }
 
+    @PreAuthorize("hasAuthority('JOB_SEEKER') or hasAuthority('JOB_PROVIDER')")
     @GetMapping("/")
-    @PreAuthorize("hasAnyAuthority('JOB_SEEKER', 'JOB_PROVIDER')")
     public ResponseEntity<BaseResponse<List<UserDTO>>> getAllUsers() {
         List<User> users = userService.getAllUsers();
         BaseResponse<List<UserDTO>> baseResponse = new BaseResponse<>();
@@ -71,8 +68,8 @@ public class UserController {
         return ResponseEntity.ok(baseResponse);
     }
 
+    @PreAuthorize("hasAuthority('JOB_SEEKER') or hasAuthority('JOB_PROVIDER')")
     @PutMapping("/{id}")
-    @PreAuthorize("#id == authentication.principal.id")
     public ResponseEntity<BaseResponse<User>> updateUser(@PathVariable Long id, @RequestBody UserDTO userDTO) {
         BaseResponse<User> baseResponse = new BaseResponse<>();
         try {
@@ -88,8 +85,8 @@ public class UserController {
         }
     }
 
+    @PreAuthorize("hasAuthority('JOB_SEEKER') or hasAuthority('JOB_PROVIDER')")
     @PatchMapping("/{id}")
-    @PreAuthorize("#id == authentication.principal.id")
     public ResponseEntity<BaseResponse<User>> partialUpdateUser(@PathVariable Long id, @RequestBody Map<String, Object> updates) {
         BaseResponse<User> baseResponse = new BaseResponse<>();
         try {
@@ -105,15 +102,15 @@ public class UserController {
         }
     }
 
+    @PreAuthorize("hasAuthority('JOB_SEEKER') or hasAuthority('JOB_PROVIDER')")
     @DeleteMapping("/{id}")
-    @PreAuthorize("#id == authentication.principal.id")
     public ResponseEntity<BaseResponse<String>> deleteUser(@PathVariable Long id) {
         BaseResponse<String> baseResponse = new BaseResponse<>();
         try {
             userService.deleteUser(id);
-            baseResponse.setStatus(HttpStatus.NO_CONTENT.value());
+            baseResponse.setStatus(HttpStatus.OK.value());
             baseResponse.setMessages("User deleted successfully.");
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(baseResponse);
+            return ResponseEntity.ok(baseResponse);
         } catch (Exception e) {
             baseResponse.setStatus(HttpStatus.BAD_REQUEST.value());
             baseResponse.setMessages("Error: " + e.getMessage());
@@ -121,5 +118,3 @@ public class UserController {
         }
     }
 }
-
-

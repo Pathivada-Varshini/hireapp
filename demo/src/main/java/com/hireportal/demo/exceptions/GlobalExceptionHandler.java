@@ -11,14 +11,28 @@ import org.springframework.web.context.request.WebRequest;
 import java.util.HashMap;
 import java.util.Map;
 
+
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<String> handleGeneralException(Exception ex, WebRequest request) {
+    public ResponseEntity<BaseResponse<String>> handleGeneralException(Exception ex, WebRequest request) {
         ex.printStackTrace();
 
-        return new ResponseEntity<>("An unexpected error occurred", HttpStatus.INTERNAL_SERVER_ERROR);
+        BaseResponse<String> response = new BaseResponse<>();
+        response.setMessages("An unexpected error occurred");
+        response.setData(null);
+        response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(CategoryNotFoundException.class)
+    public ResponseEntity<BaseResponse<Object>> handleCategoryNotFoundException(CategoryNotFoundException ex) {
+        BaseResponse<Object> response = new BaseResponse<>();
+        response.setMessages(ex.getMessage());
+        response.setData(null);
+        response.setStatus(HttpStatus.NOT_FOUND.value());
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(NotFoundException.class)
@@ -48,7 +62,6 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.CONFLICT);
     }
 
-
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<BaseResponse<Map<String, String>>> handleValidationExceptions(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
@@ -68,16 +81,6 @@ public class GlobalExceptionHandler {
         response.setData(null);
         response.setStatus(HttpStatus.BAD_REQUEST.value());
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-    }
-
-
-    @ExceptionHandler(CategoryNotFoundException.class)
-    public ResponseEntity<BaseResponse<Object>> handleCategoryNotFoundException(CategoryNotFoundException ex) {
-        BaseResponse<Object> response = new BaseResponse<>();
-        response.setMessages(ex.getMessage());
-        response.setData(null);
-        response.setStatus(HttpStatus.NOT_FOUND.value());
-        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(InternalServerErrorException.class)

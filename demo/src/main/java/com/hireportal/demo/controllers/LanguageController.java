@@ -22,20 +22,20 @@ public class LanguageController {
         this.languageService = languageService;
     }
 
-    @PostMapping
     @PreAuthorize("hasAuthority('JOB_SEEKER')")
+    @PostMapping
     public ResponseEntity<Language> createLanguage(@Valid @RequestBody LanguageDTO languageDTO) {
         return ResponseEntity.ok(languageService.createLanguage(languageDTO));
     }
 
-    @GetMapping
     @PreAuthorize("hasAuthority('JOB_SEEKER')")
+    @GetMapping
     public ResponseEntity<List<Language>> getAllLanguages() {
         return ResponseEntity.ok(languageService.getAllLanguages());
     }
 
-    @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('JOB_SEEKER')")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteLanguageById(@PathVariable("id") Long languageId) {
         languageService.deleteLanguageById(languageId);
         return ResponseEntity.noContent().build();
