@@ -4,6 +4,7 @@ import com.hireportal.demo.dto.UserDTO;
 import com.hireportal.demo.models.User;
 import com.hireportal.demo.services.UserService;
 import com.hireportal.demo.utilities.BaseResponse;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,7 +26,7 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<BaseResponse<UserDTO>> registerUser(@RequestBody UserDTO userDTO) {
+    public ResponseEntity<BaseResponse<UserDTO>> registerUser(@Valid @RequestBody UserDTO userDTO) {
         BaseResponse<UserDTO> baseResponse = new BaseResponse<>();
         try {
             User createdUser = userService.createUser(userDTO);

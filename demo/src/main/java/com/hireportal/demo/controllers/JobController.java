@@ -9,6 +9,7 @@ import com.hireportal.demo.services.JobService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
@@ -26,6 +27,7 @@ public class JobController {
         this.jobService = jobService;
     }
 
+    @PreAuthorize("hasAuthority('JOB_PROVIDER')")
     @PostMapping("/create")
     public ResponseEntity<JobDTO> createJob(
             @RequestParam("userId") Long userId,
@@ -35,6 +37,7 @@ public class JobController {
         return ResponseEntity.status(HttpStatus.CREATED).body(convertToDTO(job));
     }
 
+    @PreAuthorize("hasAuthority('JOB_PROVIDER')")
     @PatchMapping("/{jobId}")
     public ResponseEntity<JobDTO> partialUpdateJob(
             @PathVariable("jobId") Long jobId,
@@ -42,13 +45,14 @@ public class JobController {
         Job updatedJob = jobService.partialUpdateJob(jobId, jobDTO);
         return ResponseEntity.ok(convertToDTO(updatedJob));
     }
-
+    @PreAuthorize("hasAuthority('JOB_SEEKER') or hasAuthority('JOB_PROVIDER')")
     @GetMapping("/{jobId}")
     public ResponseEntity<JobDTO> getJobById(@PathVariable("jobId") Long jobId) {
         Job job = jobService.getJobById(jobId);
         return ResponseEntity.ok(convertToDTO(job));
     }
 
+    @PreAuthorize("hasAuthority('JOB_SEEKER') or hasAuthority('JOB_PROVIDER')")
     @GetMapping
     public ResponseEntity<List<JobDTO>> getAllJobs() {
         List<Job> jobs = jobService.getAllJobs();
@@ -58,6 +62,7 @@ public class JobController {
         return ResponseEntity.ok(jobDTOs);
     }
 
+    @PreAuthorize("hasAuthority('JOB_PROVIDER')")
     @PutMapping("/{jobId}")
     public ResponseEntity<JobDTO> updateJob(
             @PathVariable("jobId") Long jobId,
@@ -66,6 +71,7 @@ public class JobController {
         return ResponseEntity.ok(convertToDTO(updatedJob));
     }
 
+    @PreAuthorize("hasAuthority('JOB_SEEKER')")
     @GetMapping("/filter")
     public ResponseEntity<?> filterJobs(
             @RequestParam(value = "experienceRequired", required = false) ExperienceRequired experienceRequired,
@@ -84,6 +90,7 @@ public class JobController {
         return ResponseEntity.ok(jobDTOs);
     }
 
+    @PreAuthorize("hasAuthority('JOB_PROVIDER')")
     @DeleteMapping("/{jobId}")
     public ResponseEntity<Void> deleteJob(@PathVariable("jobId") Long jobId) {
         jobService.deleteJob(jobId);

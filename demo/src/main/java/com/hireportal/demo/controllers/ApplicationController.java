@@ -26,7 +26,6 @@ public class ApplicationController {
         this.applicationService = applicationService;
     }
 
-    // Apply to a Job - Available for JOB_SEEKER only
     @PostMapping("/{jobId}/apply")
     @PreAuthorize("hasAuthority('JOB_SEEKER')")
     public ResponseEntity<String> applyToJob(@PathVariable("jobId") Long jobId, @RequestParam("userId") Long userId) {
@@ -40,37 +39,32 @@ public class ApplicationController {
         }
     }
 
-    // Get all Applications - Accessible for both JOB_PROVIDER and JOB_SEEKER
     @GetMapping
     @PreAuthorize("hasAnyAuthority('JOB_PROVIDER', 'JOB_SEEKER')")
     public ResponseEntity<List<Application>> getAllApplications() {
         return ResponseEntity.ok(applicationService.getAllApplications());
     }
 
-    // Get Applications by User ID - Accessible for JOB_PROVIDER and JOB_SEEKER
     @GetMapping("/user/{userId}")
     @PreAuthorize("hasAnyAuthority('JOB_PROVIDER', 'JOB_SEEKER')")
     public ResponseEntity<List<Application>> getApplicationsByUserId(@PathVariable("userId") Long userId) {
         return ResponseEntity.ok(applicationService.getApplicationsByUserId(userId));
     }
 
-    // Get Applications by Job ID - Accessible for JOB_PROVIDER only
     @GetMapping("/job/{jobId}")
     @PreAuthorize("hasRole('JOB_PROVIDER')")
     public ResponseEntity<List<Application>> getApplicationsByJobId(@PathVariable("jobId") Long jobId) {
         return ResponseEntity.ok(applicationService.getApplicationsByJobId(jobId));
     }
 
-    // Get a specific Application by ID - Accessible for both JOB_PROVIDER and JOB_SEEKER
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('JOB_PROVIDER', 'JOB_SEEKER')")
+    @PreAuthorize("hasAuthority('JOB_SEEKER') or hasAuthority('JOB_PROVIDER')")
     public ResponseEntity<Application> getApplicationById(@PathVariable("id") Long applicationId) {
         Application application = applicationService.getApplicationById(applicationId)
                 .orElseThrow(() -> new NotFoundException("Application not found"));
         return ResponseEntity.ok(application);
     }
 
-    // Update Application Status - Accessible for JOB_PROVIDER only
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasAuthority('JOB_PROVIDER')")
     public ResponseEntity<Application> updateApplicationStatus(
@@ -80,7 +74,6 @@ public class ApplicationController {
         return ResponseEntity.ok(updatedApplication);
     }
 
-    // Delete an Application - Accessible for JOB_PROVIDER only
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('JOB_PROVIDER')")
     public ResponseEntity<Void> deleteApplication(@PathVariable("id") Long applicationId) {

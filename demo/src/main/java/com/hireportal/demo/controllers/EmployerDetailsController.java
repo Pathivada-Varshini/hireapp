@@ -22,7 +22,6 @@ public class EmployerDetailsController {
         this.employerDetailsService = employerDetailsService;
     }
 
-    // Only accessible by JOB_PROVIDER
     @PreAuthorize("hasAuthority('JOB_PROVIDER')")
     @GetMapping("/{userId}")
     public ResponseEntity<EmployerDetails> getEmployerDetailsByUserId(@PathVariable("userId") Long userId) {
@@ -30,14 +29,11 @@ public class EmployerDetailsController {
             EmployerDetails employerDetails = employerDetailsService.getEmployerDetailsByUserId(userId);
             return ResponseEntity.ok(employerDetails);
         } catch (Exception e) {
-            // Log the exception for debugging
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 
-
-    // Only accessible by JOB_PROVIDER
     @PreAuthorize("hasAuthority('JOB_PROVIDER')")
     @PutMapping("/{userId}")
     public ResponseEntity<EmployerDetails> updateEmployerDetails(

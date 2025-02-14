@@ -28,35 +28,21 @@ public class CategoryController {
     @PreAuthorize("hasAuthority('JOB_PROVIDER')")
     @GetMapping
     public ResponseEntity<List<Category>> getAllCategories() {
-        try {
-            List<Category> categories = categoryService.getAllCategories();
-            return ResponseEntity.ok(categories);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-        }
+        return ResponseEntity.ok(categoryService.getAllCategories());
     }
 
     @PreAuthorize("hasAuthority('JOB_PROVIDER')")
     @GetMapping("/{id}")
     public ResponseEntity<Category> getCategoryById(@PathVariable("id") Long categoryId) {
-        try {
-            return categoryService.getCategoryById(categoryId)
-                    .map(ResponseEntity::ok)
-                    .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+        return categoryService.getCategoryById(categoryId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PreAuthorize("hasAuthority('JOB_PROVIDER')")
     @PostMapping
     public ResponseEntity<Category> createCategory(@Valid @RequestBody CategoryDTO categoryDTO) {
-        try {
-            Category category = categoryService.createCategory(categoryDTO);
-            return ResponseEntity.status(HttpStatus.CREATED).body(category);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
+        return ResponseEntity.ok(categoryService.createCategory(categoryDTO));
     }
 
     @PreAuthorize("hasAuthority('JOB_PROVIDER')")
@@ -64,14 +50,7 @@ public class CategoryController {
     public ResponseEntity<Category> updateCategory(
             @PathVariable("id") Long categoryId,
             @Valid @RequestBody CategoryDTO categoryDTO) {
-        try {
-            Category category = categoryService.updateCategory(categoryId, categoryDTO);
-            return ResponseEntity.ok(category);
-        } catch (CategoryNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-        }
+        return ResponseEntity.ok(categoryService.updateCategory(categoryId, categoryDTO));
     }
 
     @PreAuthorize("hasAuthority('JOB_PROVIDER')")
@@ -79,14 +58,7 @@ public class CategoryController {
     public ResponseEntity<Category> partiallyUpdateCategory(
             @PathVariable("id") Long categoryId,
             @RequestBody CategoryDTO categoryDTO) {
-        try {
-            Category category = categoryService.partiallyUpdateCategory(categoryId, categoryDTO);
-            return ResponseEntity.ok(category);
-        } catch (CategoryNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-        }
+        return ResponseEntity.ok(categoryService.partiallyUpdateCategory(categoryId, categoryDTO));
     }
 
     @PreAuthorize("hasAuthority('JOB_PROVIDER')")
@@ -108,4 +80,6 @@ public class CategoryController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(baseResponse);
         }
     }
+
+
 }

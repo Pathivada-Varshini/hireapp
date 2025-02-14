@@ -9,30 +9,28 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<BaseResponse<String>> handleGeneralException(Exception ex, WebRequest request) {
-        ex.printStackTrace();
-
-        BaseResponse<String> response = new BaseResponse<>();
-        response.setMessages("An unexpected error occurred");
-        response.setData(null);
-        response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
-        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+    public ResponseEntity<BaseResponse<String>> handleGeneralException(Exception ex) {
+        BaseResponse<String> baseResponse = new BaseResponse<>();
+        baseResponse.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+        baseResponse.setMessages("An error occurred: " + ex.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(baseResponse);
     }
 
     @ExceptionHandler(CategoryNotFoundException.class)
-    public ResponseEntity<BaseResponse<Object>> handleCategoryNotFoundException(CategoryNotFoundException ex) {
-        BaseResponse<Object> response = new BaseResponse<>();
-        response.setMessages(ex.getMessage());
-        response.setData(null);
-        response.setStatus(HttpStatus.NOT_FOUND.value());
-        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    public ResponseEntity<BaseResponse<String>> handleCategoryNotFound(CategoryNotFoundException ex) {
+        BaseResponse<String> baseResponse = new BaseResponse<>();
+        baseResponse.setStatus(HttpStatus.NOT_FOUND.value());
+        baseResponse.setMessages(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(baseResponse);
     }
 
     @ExceptionHandler(NotFoundException.class)
@@ -45,12 +43,11 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(InvalidCredentialsException.class)
-    public ResponseEntity<BaseResponse<Object>> handleInvalidCredentialsException(InvalidCredentialsException e) {
-        BaseResponse<Object> response = new BaseResponse<>();
-        response.setMessages(e.getMessage());
-        response.setData(null);
-        response.setStatus(HttpStatus.UNAUTHORIZED.value());
-        return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+    public ResponseEntity<BaseResponse<String>> handleInvalidCredentials(InvalidCredentialsException ex) {
+        BaseResponse<String> baseResponse = new BaseResponse<>();
+        baseResponse.setStatus(HttpStatus.UNAUTHORIZED.value());
+        baseResponse.setMessages(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(baseResponse);
     }
 
     @ExceptionHandler(ApplicationAlreadyExistsException.class)
@@ -63,15 +60,15 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<BaseResponse<Map<String, String>>> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getFieldErrors().forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
-
-        BaseResponse<Map<String, String>> response = new BaseResponse<>();
-        response.setMessages("Validation errors occurred");
-        response.setData(errors);
-        response.setStatus(HttpStatus.BAD_REQUEST.value());
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    public ResponseEntity<BaseResponse<List<String>>> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        BaseResponse<List<String>> baseResponse = new BaseResponse<>();
+        baseResponse.setStatus(HttpStatus.BAD_REQUEST.value());
+        baseResponse.setMessages("Validation failed");
+        List<String> errors = ex.getBindingResult().getFieldErrors().stream()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .collect(Collectors.toList());
+        baseResponse.setData(errors);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(baseResponse);
     }
 
     @ExceptionHandler(InvalidEmailException.class)

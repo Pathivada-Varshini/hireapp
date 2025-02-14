@@ -23,7 +23,6 @@ public class ExperienceController {
         this.experienceService = experienceService;
     }
 
-    // Only accessible by JOB_SEEKER
     @PreAuthorize("hasAuthority('JOB_SEEKER')")
     @PostMapping
     public ResponseEntity<ExperienceDTO> createExperience(@Valid @RequestBody ExperienceDTO experienceDTO) {
@@ -31,7 +30,6 @@ public class ExperienceController {
         return ResponseEntity.ok(convertToDTO(createdExperience));
     }
 
-    // Only accessible by JOB_SEEKER
     @PreAuthorize("hasAuthority('JOB_SEEKER')")
     @GetMapping
     public ResponseEntity<List<ExperienceDTO>> getAllExperienceDetails() {
@@ -42,7 +40,6 @@ public class ExperienceController {
         return ResponseEntity.ok(experienceDTOs);
     }
 
-    // Only accessible by JOB_SEEKER
     @PreAuthorize("hasAuthority('JOB_SEEKER')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteExperienceById(@PathVariable("id") Long experienceId) {

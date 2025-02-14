@@ -24,34 +24,22 @@ public class ResumeController {
     @PostMapping("/createOrUpdate")
     public ResponseEntity<BaseResponse<ResumeDTO>> createOrUpdateResume(@RequestBody ResumeDTO resumeDTO) {
         BaseResponse<ResumeDTO> baseResponse = new BaseResponse<>();
-        try {
-            ResumeDTO updatedResume = resumeService.createOrUpdateResume(resumeDTO);
-            baseResponse.setStatus(HttpStatus.OK.value());
-            baseResponse.setMessages("Resume created/updated successfully");
-            baseResponse.setData(updatedResume);
-            return ResponseEntity.ok(baseResponse);
-        } catch (Exception e) {
-            baseResponse.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
-            baseResponse.setMessages("Error creating/updating resume: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(baseResponse);
-        }
+        ResumeDTO updatedResume = resumeService.createOrUpdateResume(resumeDTO);
+        baseResponse.setStatus(HttpStatus.OK.value());
+        baseResponse.setMessages("Resume created/updated successfully");
+        baseResponse.setData(updatedResume);
+        return ResponseEntity.ok(baseResponse);
     }
 
     @PreAuthorize("hasAuthority('JOB_SEEKER') or hasAuthority('JOB_PROVIDER')")
     @GetMapping("/view/{userId}")
     public ResponseEntity<BaseResponse<ResumeDTO>> viewResume(@PathVariable Long userId) {
         BaseResponse<ResumeDTO> baseResponse = new BaseResponse<>();
-        try {
-            ResumeDTO resumeDTO = resumeService.viewResume(userId);
-            baseResponse.setStatus(HttpStatus.OK.value());
-            baseResponse.setMessages("Resume fetched successfully");
-            baseResponse.setData(resumeDTO);
-            return ResponseEntity.ok(baseResponse);
-        } catch (Exception e) {
-            baseResponse.setStatus(HttpStatus.NOT_FOUND.value());
-            baseResponse.setMessages("Error fetching resume: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(baseResponse);
-        }
+        ResumeDTO resumeDTO = resumeService.viewResume(userId);
+        baseResponse.setStatus(HttpStatus.OK.value());
+        baseResponse.setMessages("Resume fetched successfully");
+        baseResponse.setData(resumeDTO);
+        return ResponseEntity.ok(baseResponse);
     }
 
     @PreAuthorize("hasAuthority('JOB_SEEKER')")
@@ -60,16 +48,10 @@ public class ResumeController {
             @PathVariable Long userId,
             @RequestBody ResumeDTO resumeDTO) {
         BaseResponse<ResumeDTO> baseResponse = new BaseResponse<>();
-        try {
-            ResumeDTO updatedResume = resumeService.updateResumePartial(userId, resumeDTO);
-            baseResponse.setStatus(HttpStatus.OK.value());
-            baseResponse.setMessages("Resume updated successfully");
-            baseResponse.setData(updatedResume);
-            return ResponseEntity.ok(baseResponse);
-        } catch (Exception e) {
-            baseResponse.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
-            baseResponse.setMessages("Error updating resume: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(baseResponse);
-        }
+        ResumeDTO updatedResume = resumeService.updateResumePartial(userId, resumeDTO);
+        baseResponse.setStatus(HttpStatus.OK.value());
+        baseResponse.setMessages("Resume updated successfully");
+        baseResponse.setData(updatedResume);
+        return ResponseEntity.ok(baseResponse);
     }
 }
